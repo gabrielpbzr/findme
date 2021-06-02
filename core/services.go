@@ -69,26 +69,18 @@ func (service *PositionServiceDB) Delete(uuid uuid.UUID) error {
 }
 
 func (service *PositionServiceDB) Get(uuid uuid.UUID) (*Position, error) {
-	stmt, err := service.db.Prepare("SELECT uuid, longitude, latitude, timestamp FROM position WHERE uuid = ?")
-	if err != nil {
-		return nil, fmt.Errorf("Couldn't retrieve position record: " + err.Error())
-	}
-	defer stmt.Close()
+	query := "SELECT uuid, longitude, latitude, time_stamp FROM position WHERE uuid = ?"
 
-	rows, err := stmt.Query(uuid.String())
+	row := service.db.QueryRow(query, uuid.String())
+	position := &Position{}
+	err := row.Scan(&position.Id, &position.Longitude, &position.Latitude, &position.Timestamp)
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't retrieve position record: " + err.Error())
-	}
-	defer rows.Close()
-	var position Position
-	for rows.Next() {
-		err = rows.Scan(&position.Id, &position.Longitude, &position.Latitude, &position.Timestamp)
-		if err != nil {
-			return nil, err
+		if err == sql.ErrNoRows {
+			return nil, nil
 		}
+		return nil, err
 	}
-
-	return &position, nil
+	return position, nil
 }
 
 func (service *PositionServiceDB) Count() (int, error) {
