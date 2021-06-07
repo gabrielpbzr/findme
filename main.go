@@ -21,7 +21,9 @@ func main() {
 
 	defer dbHandler.Close(db)
 	router := gin.Default()
-
+	// Load template files
+	router.LoadHTMLGlob("templates/*")
+	// Initialize web handlers
 	web.MakeHandlers(router, positionService)
 
 	router.Run()

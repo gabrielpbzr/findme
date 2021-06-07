@@ -19,7 +19,7 @@ func MakeHandlers(router *gin.Engine, positionService *core.PositionServiceDB) {
 }
 
 func index(ctx *gin.Context) {
-	ctx.String(200, "<h1>HELLO GIN-GONIC!</h1>")
+	ctx.HTML(http.StatusOK, "index.html", gin.H{})
 }
 
 func registerPosition(positionService *core.PositionServiceDB) gin.HandlerFunc {
