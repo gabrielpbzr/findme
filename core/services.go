@@ -46,7 +46,7 @@ func (service *PositionServiceDB) Create(p *Position) error {
 }
 
 func (service *PositionServiceDB) List(start int, quantity int) ([]*Position, error) {
-	rows, err := service.db.Query("SELECT uuid, longitude, latitude, time_stamp FROM position LIMIT ? OFFSET ?", quantity, start)
+	rows, err := service.db.Query("SELECT uuid, longitude, latitude, time_stamp FROM position ORDER BY time_stamp DESC LIMIT ? OFFSET ?", quantity, start)
 	if err != nil {
 		return nil, err
 	}
