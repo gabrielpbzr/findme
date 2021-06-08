@@ -14,6 +14,7 @@ import (
 func MakeHandlers(router *gin.Engine, positionService *core.PositionServiceDB) {
 	// cria os handlers http
 	router.GET("/", index)
+	router.Static("/static", "../assets")
 	router.GET("/api/tracking/:id", findPosition(positionService))
 	router.POST("/api/tracking", registerPosition(positionService))
 }
