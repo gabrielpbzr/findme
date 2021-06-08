@@ -2,7 +2,6 @@ package core_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -22,9 +21,9 @@ func setup(t *testing.T) error {
 	if err != nil {
 		t.Errorf("Couldn't  open database")
 	}
-	service = core.NewPositionService(conn)
 	// Initialize database structure
 	infra.InitDB(conn)
+	service = core.NewPositionService(conn)
 	return nil
 }
 
@@ -37,7 +36,7 @@ func getPosition() *core.Position {
 func TestInsertRecords(t *testing.T) {
 	err := setup(t)
 	if err != nil {
-		t.Errorf("Couldn't initialize database")
+		t.Errorf("couldn't initialize database: %s", err.Error())
 	}
 
 	pos := getPosition()
@@ -47,29 +46,29 @@ func TestInsertRecords(t *testing.T) {
 		check.NotNil(pos.Id)
 		count, err := service.Count()
 		if err != nil {
-			t.FailNow()
+			t.Errorf("couldn't insert record into database: %s", err.Error())
 		}
 		check.Equal(1, count)
-		service.Truncate()
 	})
+
 }
 
 func TestQueryRecords(t *testing.T) {
 	err := setup(t)
 	if err != nil {
-		t.Errorf("Couldn't initialize database")
+		t.Errorf("couldn't initialize database: %s", err.Error())
 	}
 
 	err = loadData()
 	if err != nil {
-		t.Errorf("Couldn't load records from file into database: %s", err.Error())
+		t.Errorf("couldn't load records from file into database: %s", err.Error())
 	}
 
 	t.Run("should query a list of records", func(t *testing.T) {
 		quantity := 5
 		records, err := service.List(0, quantity)
 		if err != nil {
-			t.Errorf("Couldn't query records from database: %s", err.Error())
+			t.Errorf("couldn't query records from database: %s", err.Error())
 		}
 		check.Equal(quantity, len(records))
 	})
@@ -87,6 +86,16 @@ func TestQueryRecords(t *testing.T) {
 		check.Equal(longitude, record.Longitude)
 		check.Equal(latitude, record.Latitude)
 	})
+
+	t.Run("should get nil when quering a inexistent record", func(t *testing.T) {
+		id := uuid.MustParse("02a9c57a-bd37-4fdc-b44d-995d210b370a")
+
+		record, err := service.Get(id)
+		if err != nil {
+			t.Errorf("couldn't query records from database: %s", err.Error())
+		}
+		check.Nil(record)
+	})
 }
 
 func loadData() error {
@@ -100,8 +109,8 @@ func loadData() error {
 	if err != nil {
 		return err
 	}
+
 	for _, p := range positions {
-		fmt.Printf("Loading: lon: %f\tlat: %f\ttime: %s\tid: %s\n", p.Longitude, p.Latitude, p.Timestamp, p.Id)
 		err = service.Create(&p)
 		if err != nil {
 			return err
