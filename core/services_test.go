@@ -1,27 +1,31 @@
 package core_test
 
 import (
-	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/gabrielpbzr/findme/core"
 	"github.com/gabrielpbzr/findme/infra"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 var check *assert.Assertions
+var service *core.PositionServiceDB
 
-func setup(t *testing.T) (*sql.DB, error) {
+func setup(t *testing.T) error {
 	check = assert.New(t)
 	dbHandler := infra.Database{DSN: ":memory:"}
 	conn, err := dbHandler.Open()
 	if err != nil {
 		t.Errorf("Couldn't  open database")
 	}
-
+	service = core.NewPositionService(conn)
 	// Initialize database structure
 	infra.InitDB(conn)
-	return conn, nil
+	return nil
 }
 
 func getPosition() *core.Position {
@@ -31,13 +35,12 @@ func getPosition() *core.Position {
 }
 
 func TestInsertRecords(t *testing.T) {
-	conn, err := setup(t)
+	err := setup(t)
 	if err != nil {
 		t.Errorf("Couldn't initialize database")
 	}
 
 	pos := getPosition()
-	service := core.NewPositionService(conn)
 
 	t.Run("should insert a record", func(t *testing.T) {
 		service.Create(pos)
@@ -51,25 +54,59 @@ func TestInsertRecords(t *testing.T) {
 	})
 }
 
-func TestDeleteRecords(t *testing.T) {
-	conn, err := setup(t)
+func TestQueryRecords(t *testing.T) {
+	err := setup(t)
 	if err != nil {
 		t.Errorf("Couldn't initialize database")
 	}
 
-	// Initialize database structure
-	infra.InitDB(conn)
-	pos := getPosition()
-	service := core.NewPositionService(conn)
+	err = loadData()
+	if err != nil {
+		t.Errorf("Couldn't load records from file into database: %s", err.Error())
+	}
 
-	t.Run("should delete a record", func(t *testing.T) {
-		service.Create(pos)
-		service.Delete(pos.Id)
-		count, err := service.Count()
+	t.Run("should query a list of records", func(t *testing.T) {
+		quantity := 5
+		records, err := service.List(0, quantity)
 		if err != nil {
-			t.FailNow()
+			t.Errorf("Couldn't query records from database: %s", err.Error())
 		}
-		check.Equal(0, count)
-		service.Truncate()
+		check.Equal(quantity, len(records))
 	})
+
+	t.Run("should query a single record", func(t *testing.T) {
+		id := uuid.MustParse("b1a0044f-9f2a-43e1-854e-d1f5a45aaa98")
+		longitude := -42.8848640
+		latitude := -20.7564320
+
+		record, err := service.Get(id)
+		if err != nil {
+			t.Errorf("Couldn't query records from database: %s", err.Error())
+		}
+		check.Equal(id, record.Id)
+		check.Equal(longitude, record.Longitude)
+		check.Equal(latitude, record.Latitude)
+	})
+}
+
+func loadData() error {
+	content, err := ioutil.ReadFile("../data/test_data.json")
+	if err != nil {
+		return err
+	}
+	var positions []core.Position
+
+	err = json.Unmarshal(content, &positions)
+	if err != nil {
+		return err
+	}
+	for _, p := range positions {
+		fmt.Printf("Loading: lon: %f\tlat: %f\ttime: %s\tid: %s\n", p.Longitude, p.Latitude, p.Timestamp, p.Id)
+		err = service.Create(&p)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

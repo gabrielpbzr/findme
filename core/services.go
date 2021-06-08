@@ -9,9 +9,8 @@ import (
 
 type PositionService interface {
 	Create(p *Position) error
-	Delete(uuid uuid.UUID) error
 	Get(uuid uuid.UUID) (*Position, error)
-	//List(start int, quantity int) ([]Position, error)
+	List(start int, quantity int) ([]Position, error)
 	Count() (int, error)
 	Truncate() error
 }
@@ -40,32 +39,30 @@ func (service *PositionServiceDB) Create(p *Position) error {
 	_, err = stmt.Exec(p.Longitude, p.Latitude, p.Timestamp, p.Id.String())
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("Couldn't record position: " + err.Error())
+		return fmt.Errorf("couldn't record position: %s", err.Error())
 	}
 	tx.Commit()
 	return nil
 }
 
-func (service *PositionServiceDB) Delete(uuid uuid.UUID) error {
-	//iniciamos uma transação
-	tx, err := service.db.Begin()
+func (service *PositionServiceDB) List(start int, quantity int) ([]*Position, error) {
+	rows, err := service.db.Query("SELECT uuid, longitude, latitude, time_stamp FROM position LIMIT ? OFFSET ?", quantity, start)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	stmt, err := tx.Prepare("DELETE FROM position WHERE uuid = ?")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+	defer rows.Close()
 
-	_, err = stmt.Exec(uuid.String())
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("Couldn't delete position record: " + err.Error())
+	positions := make([]*Position, 0, quantity)
+	for rows.Next() {
+		position := new(Position)
+		err = rows.Scan(&position.Id, &position.Longitude, &position.Latitude, &position.Timestamp)
+		if err != nil {
+			return nil, err
+		}
+		positions = append(positions, position)
 	}
-	tx.Commit()
-	return nil
+	return positions, nil
 }
 
 func (service *PositionServiceDB) Get(uuid uuid.UUID) (*Position, error) {
