@@ -14,13 +14,12 @@ import (
 func MakeHandlers(router *gin.Engine, positionService *core.PositionServiceDB) {
 	// cria os handlers http
 	router.GET("/", index)
-	router.Static("/static", "../assets")
 	router.GET("/api/tracking/:id", findPosition(positionService))
 	router.POST("/api/tracking", registerPosition(positionService))
 }
 
 func index(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "index.html", gin.H{})
+	ctx.String(http.StatusOK, "This is an API. Send your calls with credentials to /api/tracking")
 }
 
 func registerPosition(positionService *core.PositionServiceDB) gin.HandlerFunc {
