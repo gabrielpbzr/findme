@@ -1,0 +1,32 @@
+[
+    {
+        "longitude": -42.8848410,
+        "latitude": -20.7564790,
+        "timestamp": "2016-10-11T22:25:36Z",
+        "id": "490ad8b7-4f94-4c2c-adeb-aee41343a91b"
+    },
+    {
+        "longitude": -42.8848640,
+        "latitude": -20.7564320,
+        "timestamp": "2016-10-11T22:25:41Z",
+        "id": "b1a0044f-9f2a-43e1-854e-d1f5a45aaa98"
+    },
+    {
+        "longitude": -42.8849610,
+        "latitude": -20.7564110,
+        "timestamp": "2016-10-11T22:25:46Z",
+        "id": "0c1bbca5-e419-4333-a0e3-6a0fa3a2163f"
+    },
+    {
+        "longitude": -42.8850090,
+        "latitude": -20.7564790,
+        "timestamp": "2016-10-11T22:25:50Z",
+        "id": "bda52373-0113-4bee-bdc5-5e7f1bbf77e5"
+    },
+    {
+        "longitude": -42.8850590,
+        "latitude": -20.7564790,
+        "timestamp": "2016-10-11T22:26:51Z",
+        "id": "b533f18a-22a8-42c4-a41d-23d3bca04d62"
+    }
+]
